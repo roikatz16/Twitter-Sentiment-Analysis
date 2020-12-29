@@ -1,3 +1,4 @@
+import numpy
 import pandas as pd
 import numpy as np
 import re
@@ -90,10 +91,10 @@ LR_model.fit(X_train, y_train)
 y_predict_lr = LR_model.predict(X_test)
 print(accuracy_score(y_test, y_predict_lr))
 
+#######################################################################3
+
 test_file_name = "Train.csv"
-# test_ds = load_dataset(test_file_name, ["t_id", "hashtag", "created_at", "user", "text"])
 test_ds = load_dataset(test_file_name)
-# test_ds = remove_unwanted_cols(test_ds, ["t_id", "created_at", "user"])
 
 # Creating text feature
 test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
@@ -101,12 +102,23 @@ test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
 
 # Using Logistic Regression model for prediction
 test_prediction_lr = LR_model.predict(test_feature)
-
-test_result_ds = pd.DataFrame({'prediction': test_prediction_lr})
-# # Averaging out the hashtags result
-# test_result_ds = pd.DataFrame({'hashtag': test_ds.hashtag, 'prediction': test_prediction_lr})
-# test_result = test_result_ds.groupby(['hashtag']).max().reset_index()
-# test_result.columns = ['heashtag', 'predictions']
-# test_result.predictions = test_result['predictions'].apply(int_to_string)
+# numpy.savetxt("real_sample.csv", test_prediction_lr, delimiter=",")
+test_result_ds = pd.DataFrame({'real': test_ds["Sentiment"], 'prediction': test_prediction_lr})
 
 print(test_result_ds)
+print(accuracy_score(test_result_ds['real'], test_result_ds['prediction']))
+
+########################################################################################
+
+test_file_name = "Test.csv"
+test_ds = load_dataset(test_file_name)
+
+# Creating text feature
+test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
+test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
+
+# Using Logistic Regression model for prediction
+test_prediction_lr = LR_model.predict(test_feature)
+# numpy.savetxt("real_sample.csv", test_prediction_lr, delimiter=",")
+test_result_ds = pd.DataFrame({'ID': test_ds["ID"], 'Sentiment': test_prediction_lr})
+test_result_ds.to_csv('real_sample.csv', index=False)
