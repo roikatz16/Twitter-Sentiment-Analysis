@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import re
 import string
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -17,9 +20,9 @@ from sklearn.svm import SVC
 # Global Parameters
 stop_words = set(stopwords.words('english'))
 
-def load_dataset(filename, cols):
+def load_dataset(filename):
     dataset = pd.read_csv(filename, encoding='latin-1')
-    dataset.columns = cols
+    # dataset.columns = cols
     return dataset
 
 def remove_unwanted_cols(dataset, cols):
@@ -61,11 +64,12 @@ def int_to_string(sentiment):
         return "Positive"
 
 # Load dataset
-dataset = load_dataset("data/training.csv", ['target', 't_id', 'created_at', 'query', 'user', 'text'])
+# dataset = load_dataset("training.csv", ['target', 't_id', 'created_at', 'query', 'user', 'text'])
+dataset = load_dataset("Train.csv")
 # Remove unwanted columns from dataset
-n_dataset = remove_unwanted_cols(dataset, ['t_id', 'created_at', 'query', 'user'])
+# n_dataset = remove_unwanted_cols(dataset, ['t_id', 'created_at', 'query', 'user'])
 # Preprocess data
-dataset.text = dataset['text'].apply(preprocess_tweet_text)
+dataset.SentimentText = dataset['SentimentText'].apply(preprocess_tweet_text)
 # Split dataset into Train, Test
 
 # Same tf vector will be used for Testing sentiments on unseen trending data
@@ -86,21 +90,23 @@ LR_model.fit(X_train, y_train)
 y_predict_lr = LR_model.predict(X_test)
 print(accuracy_score(y_test, y_predict_lr))
 
-test_file_name = "trending_tweets/08-04-2020-1586291553-tweets.csv"
-test_ds = load_dataset(test_file_name, ["t_id", "hashtag", "created_at", "user", "text"])
-test_ds = remove_unwanted_cols(test_ds, ["t_id", "created_at", "user"])
+test_file_name = "Train.csv"
+# test_ds = load_dataset(test_file_name, ["t_id", "hashtag", "created_at", "user", "text"])
+test_ds = load_dataset(test_file_name)
+# test_ds = remove_unwanted_cols(test_ds, ["t_id", "created_at", "user"])
 
 # Creating text feature
-test_ds.text = test_ds["text"].apply(preprocess_tweet_text)
+test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
 test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
 
 # Using Logistic Regression model for prediction
 test_prediction_lr = LR_model.predict(test_feature)
 
-# Averaging out the hashtags result
-test_result_ds = pd.DataFrame({'hashtag': test_ds.hashtag, 'prediction': test_prediction_lr})
-test_result = test_result_ds.groupby(['hashtag']).max().reset_index()
-test_result.columns = ['heashtag', 'predictions']
-test_result.predictions = test_result['predictions'].apply(int_to_string)
+test_result_ds = pd.DataFrame({'prediction': test_prediction_lr})
+# # Averaging out the hashtags result
+# test_result_ds = pd.DataFrame({'hashtag': test_ds.hashtag, 'prediction': test_prediction_lr})
+# test_result = test_result_ds.groupby(['hashtag']).max().reset_index()
+# test_result.columns = ['heashtag', 'predictions']
+# test_result.predictions = test_result['predictions'].apply(int_to_string)
 
-print(test_result)
+print(test_result_ds)
