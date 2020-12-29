@@ -65,14 +65,9 @@ def int_to_string(sentiment):
         return "Positive"
 
 # Load dataset
-# dataset = load_dataset("training.csv", ['target', 't_id', 'created_at', 'query', 'user', 'text'])
 dataset = load_dataset("Train.csv")
-# Remove unwanted columns from dataset
-# n_dataset = remove_unwanted_cols(dataset, ['t_id', 'created_at', 'query', 'user'])
 # Preprocess data
 dataset.SentimentText = dataset['SentimentText'].apply(preprocess_tweet_text)
-# Split dataset into Train, Test
-
 # Same tf vector will be used for Testing sentiments on unseen trending data
 tf_vector = get_feature_vector(np.array(dataset.iloc[:, 1]).ravel())
 X = tf_vector.transform(np.array(dataset.iloc[:, 1]).ravel())
@@ -119,6 +114,6 @@ test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
 
 # Using Logistic Regression model for prediction
 test_prediction_lr = LR_model.predict(test_feature)
-# numpy.savetxt("real_sample.csv", test_prediction_lr, delimiter=",")
+# save results
 test_result_ds = pd.DataFrame({'ID': test_ds["ID"], 'Sentiment': test_prediction_lr})
 test_result_ds.to_csv('real_sample.csv', index=False)
