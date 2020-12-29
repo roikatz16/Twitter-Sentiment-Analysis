@@ -76,6 +76,7 @@ dataset = load_dataset("Train.csv")
 dataset.SentimentText = dataset['SentimentText'].apply(preprocess_tweet_text)
 # Same tf vector will be used for Testing sentiments on unseen trending data
 tf_vector = get_feature_vector(np.array(dataset.iloc[:, 1]).ravel())
+#TODO: add to X more features
 X = tf_vector.transform(np.array(dataset.iloc[:, 1]).ravel())
 y = np.array(dataset.iloc[:, 0]).ravel()
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=30)
@@ -102,6 +103,7 @@ test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
 test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
 
 # Using Logistic Regression model for prediction
+#TODO: add to test_feature more features
 test_prediction_lr = LR_model.predict(test_feature)
 # numpy.savetxt("real_sample.csv", test_prediction_lr, delimiter=",")
 test_result_ds = pd.DataFrame({'real': test_ds["Sentiment"], 'prediction': test_prediction_lr})
@@ -119,6 +121,7 @@ test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
 test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
 
 # Using Logistic Regression model for prediction
+#TODO: add to test_feature more features
 test_prediction_lr = LR_model.predict(test_feature)
 # save results
 test_result_ds = pd.DataFrame({'ID': test_ds["ID"], 'Sentiment': test_prediction_lr})
