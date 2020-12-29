@@ -4,6 +4,7 @@ import numpy as np
 import re
 import string
 import nltk
+
 nltk.download('stopwords')
 nltk.download('punkt')
 from nltk.corpus import stopwords
@@ -21,10 +22,12 @@ from sklearn.svm import SVC
 # Global Parameters
 stop_words = set(stopwords.words('english'))
 
+
 def load_dataset(filename):
     dataset = pd.read_csv(filename, encoding='latin-1')
     # dataset.columns = cols
     return dataset
+
 
 def remove_unwanted_cols(dataset, cols):
     for col in cols:
@@ -51,10 +54,12 @@ def preprocess_tweet_text(tweet):
 
     return " ".join(filtered_words)
 
+
 def get_feature_vector(train_fit):
     vector = TfidfVectorizer(sublinear_tf=True)
     vector.fit(train_fit)
     return vector
+
 
 def int_to_string(sentiment):
     if sentiment == 0:
@@ -63,6 +68,7 @@ def int_to_string(sentiment):
         return "Neutral"
     else:
         return "Positive"
+
 
 # Load dataset
 dataset = load_dataset("Train.csv")
