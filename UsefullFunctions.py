@@ -1,15 +1,11 @@
+import os
 import re
 from gensim.models import KeyedVectors
+import math
 
 
-def extract_from_twit(str):
-    result = re.findall(r"@(\w+)", str)
-    return result
+from scipy.sparse import csr_matrix, vstack
+A = csr_matrix([[1, 3, 9], [4, 0, 6]])
+B = csr_matrix([[5, 6, 7]])
+print(vstack([A, B]).toarray())
 
-
-# str1 = "I love @stackoverflow because #people are very #helpful!"
-# print(extract_from_twit(str1))
-
-with open('positive_word.txt', 'rb') as f:
-    lines = f.readlines()
-    print(lines[3:7])
