@@ -26,17 +26,14 @@ class TwitterSemanticModel():
         # dataset.columns = cols
         return dataset
 
-    def remove_unwanted_cols(self, dataset, cols):
-        for col in cols:
-            del dataset[col]
-        return dataset
 
+    #extract hashtaged words from tweet
     def get_hashtags(self, tweet):
         hashtag = re.findall(r'\#\w+', tweet)
         if len(hashtag) == 0:
             return 0
         return 1
-
+    #extract taged words from tweet
     def get_tags(self, tweet):
         tag = re.findall(r'\@\w+', tweet)
         if len(tag) == 0:
@@ -225,84 +222,54 @@ if __name__ == '__main__':
     y = np.array(dataset.iloc[:, 0]).ravel()
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=30)
-    ##########CROSS VALIDATION################
-    # cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='accuracy')
-    # cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='precision')
-    # cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='recall')
-    #########TRAINING MODEL####################
-    model = svm.SVC()  # choose model
-    y_predict = TSM.fit_predict_model(model, X_train, y_train, X_test)
-    ########GET ACCURACY SCORE################
-    print(accuracy_score(y_test, y_predict))
+    """ ----------- CROSS VALIDATION ----------- """
+    cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='accuracy')
+    cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='precision')
+    cross_val_results, models = TSM.cross_validation(X_train, y_train, scoring='recall')
+    """-------------TRAINING MODEL------------"""
+    for name, model in models:
+        # model = MultinomialNB()  # choose model
+        y_predict = TSM.fit_predict_model(model, X_train, y_train, X_test)
+        """-------------GET ACCURACY SCORE------------"""
+        msg = f"{name}: {accuracy_score(y_test, y_predict)}"
+        print(msg)
+        # print(accuracy_score(y_test, y_predict))
 
-    ###############GET TEST PREDICT RESULTS FOR KAGGEL CHALLANGE###################
-    # Load dataset
-    test_file_name = "Test.csv"
-    test_ds = TSM.load_dataset(test_file_name)
-    # Preprocess data
-    hashtags = (test_ds['SentimentText'].apply(TSM.get_hashtags)).tolist()
-    tags = (test_ds['SentimentText'].apply(TSM.get_tags)).tolist()
-    tweet_length = (test_ds['SentimentText'].apply(TSM.get_tweet_length)).tolist()
+        """-------GET TEST PREDICT RESULTS FOR KAGGEL CHALLANGE------"""
+        # Load dataset
+        test_file_name = "Test.csv"
+        test_ds = TSM.load_dataset(test_file_name)
+        # Preprocess data
+        hashtags = (test_ds['SentimentText'].apply(TSM.get_hashtags)).tolist()
+        tags = (test_ds['SentimentText'].apply(TSM.get_tags)).tolist()
+        tweet_length = (test_ds['SentimentText'].apply(TSM.get_tweet_length)).tolist()
 
-    feature_question_marks = test_ds['SentimentText'].apply(TSM.count_question_marks).to_list()
-    feature_exclamation_marks = test_ds['SentimentText'].apply(TSM.count_exclamation_marks).to_list()
-    feature_upper_words = test_ds['SentimentText'].apply(TSM.count_upper).to_list()
+        feature_question_marks = test_ds['SentimentText'].apply(TSM.count_question_marks).to_list()
+        feature_exclamation_marks = test_ds['SentimentText'].apply(TSM.count_exclamation_marks).to_list()
+        feature_upper_words = test_ds['SentimentText'].apply(TSM.count_upper).to_list()
 
-    feature_sad = test_ds['SentimentText'].apply(TSM.sad_smilies).to_list()
-    feature_happy = test_ds['SentimentText'].apply(TSM.happy_smilies).to_list()
+        feature_sad = test_ds['SentimentText'].apply(TSM.sad_smilies).to_list()
+        feature_happy = test_ds['SentimentText'].apply(TSM.happy_smilies).to_list()
 
-    test_ds.SentimentText = test_ds['SentimentText'].apply(TSM.preprocess_tweet_text)
+        test_ds.SentimentText = test_ds['SentimentText'].apply(TSM.preprocess_tweet_text)
 
-    X = TSM.get_tweet_features_by_TfidfVectorizer(test_ds, tf_vector)
-    other_features = []
-    # TODO: add to combine_features more features
-    # other_features.append(hashtags)
-    # other_features.append(tags)
-    # other_features.append(tweet_length)
+        X = TSM.get_tweet_features_by_TfidfVectorizer(test_ds, tf_vector)
+        other_features = []
+        """--------PUT FEATURES---------------"""
+        # other_features.append(hashtags)
+        # other_features.append(tags)
+        # other_features.append(tweet_length)
 
-    # other_features.append(feature_question_marks)
-    # other_features.append(feature_exclamation_marks)
-    # other_features.append(feature_upper_words)
+        # other_features.append(feature_question_marks)
+        # other_features.append(feature_exclamation_marks)
+        # other_features.append(feature_upper_words)
 
-    other_features.append(feature_sad)
-    other_features.append(feature_happy)
+        other_features.append(feature_sad)
+        other_features.append(feature_happy)
 
-    X = TSM.combine_features(X, other_features)
+        X = TSM.combine_features(X, other_features)
 
-    y_predict = model.predict(X)
-    # save results
-    test_result_ds = pd.DataFrame({'ID': test_ds["ID"], 'Sentiment': y_predict})
-    test_result_ds.to_csv('real_sample.csv', index=False)
-
-##############################################################################
-# # Training Naive Bayes model
-# NB_model = MultinomialNB()
-# NB_model.fit(X_train, y_train)
-# y_predict_nb = NB_model.predict(X_test)
-# print(accuracy_score(y_test, y_predict_nb))
-#
-# # Training Logistics Regression model
-# LR_model = LogisticRegression(solver='lbfgs')
-# LR_model.fit(X_train, y_train)
-# y_predict_lr = LR_model.predict(X_test)
-# print(accuracy_score(y_test, y_predict_lr))
-
-########################################################################################
-
-# test_file_name = "Train.csv"
-# test_ds = load_dataset(test_file_name)
-#
-# # Creating text feature
-# test_ds.SentimentText = test_ds["SentimentText"].apply(preprocess_tweet_text)
-# test_feature = tf_vector.transform(np.array(test_ds.iloc[:, 1]).ravel())
-# # test_feature = hstack(test_feature, feature_1)
-#
-# # Using Logistic Regression model for prediction
-# test_prediction_lr = LR_model.predict(test_feature)
-# # numpy.savetxt("real_sample.csv", test_prediction_lr, delimiter=",")
-# test_result_ds = pd.DataFrame({'real': test_ds["Sentiment"], 'prediction': test_prediction_lr})
-#
-# print(test_result_ds)
-# print(accuracy_score(test_result_ds['real'], test_result_ds['prediction']))
-
-########################################################################################
+        y_predict = model.predict(X)
+        # save results
+        test_result_ds = pd.DataFrame({'ID': test_ds["ID"], 'Sentiment': y_predict})
+        test_result_ds.to_csv(f"real_sample_'{name}'.csv'", index=False)
